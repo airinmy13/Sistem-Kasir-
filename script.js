@@ -229,74 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Interactive Cart Logic (Kasir)
     // ----------------------------------------------------
     // Global Products Array (source of truth)
-    let products = [
-        {
-            id: 'sosis',
-            name: 'Sosis',
-            category: 'Jajanan',
-            price: 1000,
-            stock: 50,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAbXK1u2ymwbMhYvBwtTOr2cMHQfp0oPh8lMLESnUMmqkIwb5nqkX8v5JPCGVXYM32t0kbro9jZl77fjPv58HRRb3JFGRIZI-IoJc69zRdtaQJJePwWypbBZgeaNB1VI9A8hr6r5YnNaSkpl2NUr-AAG45rKhmh0DPYdURMpulgaLiCGAYG_BKO-_0AVsibBJME379pp7SkNneWySkMjXEGnmqZeTYwXlGtdmAf3-lZyeEbXa2m95X7BiWBSa-cddiqyzKmoXctsTqO'
-        },
-        {
-            id: 'pentol',
-            name: 'Pentol',
-            category: 'Bakaran',
-            price: 1000,
-            stock: 100,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6xc5OgqC7bikDFEYNr3o86XoH6p1uqnKuYrR_aLhMyEU70tcjcam0UdVkwfy50p0h-8Hc4ixI5W8zEA4__hzUr_yJfQ_9CSiqQlhLlWLKf52tLWKlxQ8SX6GtiJ0REFLek-w2ctX7RzLHUZCSZVPR7KEEZFoXqxGSP1oIjkNwUvWj-qfbeONVNad-6mtaRPltPJ20sKEhVeHEvHzdZ49PKnFI2hbTSL18y3VoTX_MZssZ54A6E6dDtsyFB05t4RW-_pPYo0Hw1977'
-        },
-        {
-            id: 'kebab',
-            name: 'Kulit Kebab',
-            category: 'Jajanan',
-            price: 2000,
-            stock: 20,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4nf97alKgoxp-nV-5DSgpMzckG315c6Ib2W6Tl5qu5YaUJY9lYjX30Hdw5DrcZmSnkv1gc8U-P0rZPzSLxvX16sO5Q8xB0IBuJciZAX7BUcC_jEBSQBFUJ3ucUic8J8aYRxn_ZsO1Gvkof-KEC2DhPI7BRbfJG6XnY-KLGMSoHfwIzhiO1JhO5qcYi-t-oLsxSjQm0N2CMoovc6B5Mam_SseAsRfYl2HXj2WsDPGZNTdqQ7u6lw9sB0BVld3pTTqDCZ-NSV3O2vAK'
-        },
-        {
-            id: 'dimsum',
-            name: 'Dimsum',
-            category: 'Jajanan',
-            price: 2500,
-            stock: 30,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6vE5WbfbqxR-GAmOq_KMnewSVEc5l6M85eTA-Q4lEMEe70Phd2C4H_wVfK2nwiQU3MPGj3kUXJ856Umdt6gbj3SqbW6zpSm8e5xzSCp5osYf18bpTvhr6jicnEYpORcxbiJV1lodgAjWgX28bsMMAmr6VHhL_4uj0AIJoBAyERh8mQidv1pj8cm4v8IFqUFeNWd-2Hknd-6ZbFiDzyebKp3xMK6_g1EYt8hoTLK9Fjd4WzVJcLRZzbbYVZXjuXk1QW3sEkI5m3E4S'
-        },
-        {
-            id: 'corndog',
-            name: 'Corndog',
-            category: 'Jajanan',
-            price: 1000,
-            stock: 40,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnSY2Rdrr5QTNU5sVj8IE2B5WBxG1mwShRlfri85JL_x6-6E6JSCTt78pDvT7GE7jCnAeIF6nAcM_pTwII6V0FNxoIStfJ_24RUUz1IUv-_-lf-JM7PQsxvogDGOlC8tvVhaHRDuJwJ-PR3yX5bEbcMJQi8iYmra0_EyqXnk5jgjKw8N1ZgDgQ1PIkDj41-BHdoI5TiC5-XJrM0MZ98qA9sVq0DJd7XQ03Z6Wz7_XmrswFjja9ZyQMqKEeiAYSWuqoPUX8GW0tHjRU'
-        },
-        {
-            id: 'bakaran',
-            name: 'Bakaran',
-            category: 'Bakaran',
-            price: 1000,
-            stock: 75,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuChZQhmQ4VWMYC6nW6dotr8WGniJ9gACXbIUyi9-lMeDCPWoLgnEFtt2HCacv4IxS7Jb8cbzT0N1s-NQe0XJrZYP_JIW8ldzCPjEG_8ic09P_Nd7x8nvkkXjwODb70YaJThljp81vdsffldaehbtnqVjJQ06cRwhPcTCpGESRVArb6vrIRZbCiEM3F0BcM9yJWu6ts3wpxKH2fdp2O1JtGZKqFVpXIo_U16fovCLqLWU7Ex2_3qR_hwWSIruMOi5IioxB_1Nt16wiE9'
-        }
-    ];
+    // Start with empty products — user will add their own menu items
+    let products = [];
 
-    let cart = [
-        { id: 'corndog', name: 'Corndog', price: 1000, quantity: 2 },
-        { id: 'dimsum', name: 'Dimsum', price: 2500, quantity: 3 },
-        { id: 'kebab', name: 'Kulit Kebab', price: 2000, quantity: 1 }
-    ];
+    let cart = [];
 
-    // Global Sales Transactions Array
-    let sales = [
-        { id: "TRX00121", date: "2026-06-24", time: "09:15", menu: "Corndog", qty: 2, total: 2000, method: "Tunai" },
-        { id: "TRX00122", date: "2026-06-24", time: "09:20", menu: "Bakaran", qty: 3, total: 3000, method: "QRIS" },
-        { id: "TRX00123", date: "2026-06-24", time: "09:45", menu: "Wonton Chili Oil", qty: 1, total: 5000, method: "Tunai" },
-        { id: "TRX00124", date: "2026-06-24", time: "10:00", menu: "Dimsum", qty: 4, total: 10000, method: "QRIS" },
-        { id: "TRX00125", date: "2026-06-24", time: "10:20", menu: "Kebab", qty: 1, total: 2000, method: "Tunai" },
-        { id: "TRX00120", date: "2026-06-23", time: "15:30", menu: "Pentol", qty: 5, total: 5000, method: "QRIS" },
-        { id: "TRX00119", date: "2026-06-23", time: "16:00", menu: "Sosis", qty: 10, total: 10000, method: "Tunai" },
-        { id: "TRX00118", date: "2026-06-22", time: "11:45", menu: "Corndog", qty: 4, total: 4000, method: "QRIS" },
-    ];
+    // Global Sales Transactions Array — starts empty
+    let sales = [];
 
     const cartItemsWrapper = document.getElementById('cart-items');
     const cartTotalLabel = document.getElementById('cart-total');
@@ -1312,114 +1251,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const reportData = {
         hari: {
-            omset: "Rp 350.000",
-            laba: "Rp 180.000",
-            transaksi: "Rp 350.000",
-            count: 47,
-            terlaris: "Corndog",
-            terlarisQty: 20,
-            chartPath: "M0 80 L 15 90 L 30 80 L 45 85 L 60 70 L 75 50 L 90 35 L 100 20",
-            chartArea: "M0 80 L 15 90 L 30 80 L 45 85 L 60 70 L 75 50 L 90 35 L 100 20 L 100 100 L 0 100 Z",
-            catJajananPct: "45%",
-            catBakaranPct: "40%",
-            catMinumanPct: "15%",
-            tableRows: `
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">24 Juni 2026 (Hari Ini)</td>
-                    <td class="px-6 py-4 text-body-md text-center">47</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">350.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">180.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Sangat Baik</span>
-                    </td>
-                </tr>
-            `
+            omset: "Rp 0",
+            laba: "Rp 0",
+            transaksi: "Rp 0",
+            count: 0,
+            terlaris: "-",
+            terlarisQty: 0,
+            chartPath: "M0 100 L 100 100",
+            chartArea: "M0 100 L 100 100 L 100 100 L 0 100 Z",
+            catJajananPct: "0%",
+            catBakaranPct: "0%",
+            catMinumanPct: "0%",
+            tableRows: `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Belum ada transaksi hari ini</td></tr>`
         },
         minggu: {
-            omset: "Rp 2.450.000",
-            laba: "Rp 1.180.000",
-            transaksi: "Rp 350.000",
-            count: 350,
-            terlaris: "Bakaran",
-            terlarisQty: 145,
-            chartPath: "M0 85 L 15 70 L 30 75 L 45 60 L 60 40 L 75 35 L 90 20 L 100 15",
-            chartArea: "M0 85 L 15 70 L 30 75 L 45 60 L 60 40 L 75 35 L 90 20 L 100 15 L 100 100 L 0 100 Z",
-            catJajananPct: "50%",
-            catBakaranPct: "35%",
-            catMinumanPct: "15%",
-            tableRows: `
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">Minggu 4 (21-24 Juni)</td>
-                    <td class="px-6 py-4 text-body-md text-center">178</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">1.350.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">695.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Sangat Baik</span>
-                    </td>
-                </tr>
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">Minggu 3 (14-20 Juni)</td>
-                    <td class="px-6 py-4 text-body-md text-center">172</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">1.100.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">485.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Baik</span>
-                    </td>
-                </tr>
-            `
+            omset: "Rp 0",
+            laba: "Rp 0",
+            transaksi: "Rp 0",
+            count: 0,
+            terlaris: "-",
+            terlarisQty: 0,
+            chartPath: "M0 100 L 100 100",
+            chartArea: "M0 100 L 100 100 L 100 100 L 0 100 Z",
+            catJajananPct: "0%",
+            catBakaranPct: "0%",
+            catMinumanPct: "0%",
+            tableRows: `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Belum ada transaksi minggu ini</td></tr>`
         },
         bulan: {
-            omset: "Rp 12.450.000",
-            laba: "Rp 5.890.000",
-            transaksi: "Rp 415.000",
-            count: 1240,
-            terlaris: "Sosis",
-            terlarisQty: 620,
-            chartPath: "M0 80 L 15 50 L 30 65 L 45 40 L 60 70 L 75 30 L 90 20 L 100 10",
-            chartArea: "M0 80 L 15 50 L 30 65 L 45 40 L 60 70 L 75 30 L 90 20 L 100 10 L 100 100 L 0 100 Z",
-            catJajananPct: "55%",
-            catBakaranPct: "30%",
-            catMinumanPct: "15%",
-            tableRows: `
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">24 Juni 2026</td>
-                    <td class="px-6 py-4 text-body-md text-center">47</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">350.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">180.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Sangat Baik</span>
-                    </td>
-                </tr>
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">23 Juni 2026</td>
-                    <td class="px-6 py-4 text-body-md text-center">42</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">320.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">165.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Baik</span>
-                    </td>
-                </tr>
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">22 Juni 2026</td>
-                    <td class="px-6 py-4 text-body-md text-center">38</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">290.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">140.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-label-sm font-bold">Cukup</span>
-                    </td>
-                </tr>
-                <tr class="hover:bg-surface-bright/50 transition-colors">
-                    <td class="px-6 py-4 font-label-lg text-on-surface">21 Juni 2026</td>
-                    <td class="px-6 py-4 text-body-md text-center">51</td>
-                    <td class="px-6 py-4 font-headline-sm text-primary text-right">390.000</td>
-                    <td class="px-6 py-4 font-headline-sm text-green-700 text-right">210.000</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Sangat Baik</span>
-                    </td>
-                </tr>
-            `
+            omset: "Rp 0",
+            laba: "Rp 0",
+            transaksi: "Rp 0",
+            count: 0,
+            terlaris: "-",
+            terlarisQty: 0,
+            chartPath: "M0 100 L 100 100",
+            chartArea: "M0 100 L 100 100 L 100 100 L 0 100 Z",
+            catJajananPct: "0%",
+            catBakaranPct: "0%",
+            catMinumanPct: "0%",
+            tableRows: `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Belum ada transaksi bulan ini</td></tr>`
         }
     };
+
+
 
     const updateReportView = (period) => {
         const data = reportData[period];

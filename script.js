@@ -695,14 +695,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error('Printer tidak terdeteksi sebagai perangkat ESC/POS yang bisa ditulisi.');
                 }
 
-                // Send data in chunks of 512 bytes (common limitation for BLE)
-                const CHUNK_SIZE = 512;
+                // Helper: delay between chunks so printer buffer doesn't overflow
+                const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+                // Send data in small chunks of 100 bytes with 50ms delay between each
+                // (Large chunks cause buffer overflow on thermal printers via BLE)
+                const CHUNK_SIZE = 100;
                 for (let i = 0; i < data.length; i += CHUNK_SIZE) {
                     const chunk = data.slice(i, i + CHUNK_SIZE);
-                    await characteristic.writeValue(chunk);
+                    if (characteristic.properties.writeWithoutResponse) {
+                        await characteristic.writeValueWithoutResponse(chunk);
+                    } else {
+                        await characteristic.writeValue(chunk);
+                    }
+                    await sleep(50); // 50ms delay between chunks
                 }
 
-                alert('Cetak struk berhasil dikirim ke printer!');
+                // Extra feed lines + paper cut command (ESC/POS)
+                // \x1B\x64\x05 = Feed 5 lines, \x1D\x56\x42\x00 = Full cut
+                const cutCmd = new Uint8Array([0x1B, 0x64, 0x05, 0x1D, 0x56, 0x42, 0x00]);
+                await sleep(200);
+                if (characteristic.properties.writeWithoutResponse) {
+                    await characteristic.writeValueWithoutResponse(cutCmd);
+                } else {
+                    await characteristic.writeValue(cutCmd);
+                }
+
+                alert('Struk berhasil dicetak!');
 
             } catch (error) {
                 console.error(error);

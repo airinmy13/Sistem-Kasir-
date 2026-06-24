@@ -1,0 +1,301 @@
+/* =====================================================
+   JajanKu POS — Global Styles & Responsive Layout
+   ===================================================== */
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #fff8f5;
+    color: #28180d;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.custom-chart-gradient {
+    background: linear-gradient(180deg, rgba(85, 55, 34, 0.1) 0%, rgba(85, 55, 34, 0) 100%);
+}
+
+.sidebar-active-gradient {
+    background: rgba(251, 221, 202, 0.2);
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar,
+.scrolled-table::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track,
+.scrolled-table::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.scrolled-table::-webkit-scrollbar-thumb { background: #d4c3ba; border-radius: 10px; }
+
+.menu-card:active  { transform: scale(0.98); }
+.transition-soft   { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* =====================================================
+   MOBILE BOTTOM NAVIGATION — Default hidden on desktop
+   ===================================================== */
+#mobile-bottom-nav {
+    display: none;  /* hidden by default; shown via media query below */
+}
+
+/* =====================================================
+   DESKTOP (≥ 1024px)
+   ===================================================== */
+@media (min-width: 1024px) {
+    #sidebar            { transform: translateX(0) !important; }
+    #sidebar-overlay    { display: none !important; }
+    #mobile-menu-toggle { display: none !important; }
+    .mobile-nav-hamburger { display: none !important; }
+    main#main-content   { margin-left: 280px; padding-bottom: 0; }
+
+    /* Kasir: side-by-side layout */
+    #kasir-layout { flex-direction: row; }
+    #kasir-cart-panel {
+        position: relative !important;
+        transform: none !important;
+        width: auto !important;
+        min-width: 380px !important;
+        flex: 1;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(85,55,34,0.1) !important;
+        bottom: auto !important; left: auto !important; right: auto !important;
+        height: 100% !important; max-height: none !important;
+    }
+    #cart-fab-btn          { display: none !important; }
+    #kasir-cart-drag-handle { display: none !important; }
+    #cart-close-mobile-btn { display: none !important; }
+}
+
+/* =====================================================
+   MOBILE & TABLET (< 1024px)
+   ===================================================== */
+@media (max-width: 1023px) {
+
+    /* ---- Sidebar: slide-in drawer ---- */
+    #sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 200;
+    }
+    #sidebar.open { transform: translateX(0); }
+
+    #sidebar-overlay {
+        display: block;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 199;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    #sidebar-overlay.visible { opacity: 1; pointer-events: all; }
+
+    /* ---- Main content: full width ---- */
+    main#main-content {
+        margin-left: 0 !important;
+        /* Reserve space for fixed bottom nav */
+        padding-bottom: 72px !important;
+        height: 100dvh !important;
+    }
+
+    /* ---- Each tab content: scrollable, padded for nav ---- */
+    .tab-content {
+        padding-bottom: 72px;
+    }
+
+    /* ---- Hamburger visible ---- */
+    #mobile-menu-toggle { display: flex !important; }
+    .mobile-nav-hamburger { display: flex !important; }
+
+    /* ---- Bottom Navigation Bar: always fixed at bottom ---- */
+    #mobile-bottom-nav {
+        display: flex !important;          /* override the default:none above */
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 64px;
+        background: #553722;
+        border-top: 1px solid rgba(255,255,255,0.12);
+        z-index: 150;
+        align-items: stretch;
+        justify-content: space-around;
+        padding: 0;
+        box-shadow: 0 -4px 24px rgba(85,55,34,0.25);
+        /* Prevent any JS or inline style from hiding it */
+    }
+
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        flex: 1;
+        padding: 8px 4px 6px;
+        border-radius: 0;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        transition: background 0.18s ease;
+        color: rgba(255,255,255,0.55);
+        position: relative;
+    }
+    .mobile-nav-item.active {
+        color: #fff;
+        background: rgba(255,255,255,0.14);
+    }
+    /* Active indicator pill */
+    .mobile-nav-item.active::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 20%; right: 20%;
+        height: 3px;
+        background: #eabda0;
+        border-radius: 0 0 4px 4px;
+    }
+    .mobile-nav-item .material-symbols-outlined {
+        font-size: 22px;
+        line-height: 1;
+    }
+    .mobile-nav-item > span:last-child {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        line-height: 1;
+    }
+
+    /* ---- Kasir: stacked on mobile ---- */
+    #kasir-layout { flex-direction: column !important; }
+    #kasir-menu-area {
+        flex: none !important;
+        height: calc(100% - 0px) !important;
+        overflow-y: auto !important;
+    }
+
+    /* ---- Cart Panel: bottom sheet ---- */
+    #kasir-cart-panel {
+        position: fixed !important;
+        bottom: 64px !important;          /* just above bottom nav */
+        left: 0 !important; right: 0 !important;
+        width: 100% !important;
+        height: 82vh !important;
+        max-height: 82vh !important;
+        min-width: unset !important;
+        border-radius: 24px 24px 0 0 !important;
+        /* Hidden fully below bottom nav */
+        transform: translateY(calc(100% + 64px)) !important;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        z-index: 160;
+        box-shadow: 0 -8px 40px rgba(85,55,34,0.25) !important;
+    }
+    #kasir-cart-panel.open {
+        transform: translateY(0) !important;
+    }
+
+    /* Drag handle on cart panel */
+    #kasir-cart-drag-handle {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px 0 4px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    /* FAB button to open cart */
+    #cart-fab-btn {
+        position: fixed;
+        bottom: 76px; right: 16px;
+        z-index: 155;
+        background: #553722;
+        color: white;
+        border-radius: 24px;
+        padding: 13px 18px;
+        box-shadow: 0 6px 24px rgba(85,55,34,0.40);
+        align-items: center;
+        gap: 8px;
+        font-size: 14px; font-weight: 700;
+        cursor: pointer;
+        border: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    #cart-fab-btn:active { transform: scale(0.96); }
+    #cart-fab-count {
+        background: #eabda0; color: #553722;
+        border-radius: 50%;
+        width: 22px; height: 22px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 800;
+    }
+
+    /* Header chips hidden on mobile to save space */
+    .header-date-chip { display: none !important; }
+
+    /* Tab header padding */
+    .tab-header {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        padding-top: 12px !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* Dashboard stats grid: 2 cols */
+    .dashboard-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Product grid: 2 cols */
+    #kasir-products-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Table: scroll horizontally */
+    .responsive-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Filters: stacked on mobile */
+    .penjualan-filters { flex-direction: column !important; }
+    .penjualan-filters > div { flex: none !important; width: 100% !important; }
+
+    /* Modal: full width on mobile */
+    .modal-panel { max-width: calc(100vw - 32px) !important; }
+
+    /* Padding for tabs that scroll */
+    #tab-dashboard,
+    #tab-penjualan,
+    #tab-menu,
+    #tab-laporan {
+        padding-bottom: 80px !important;
+    }
+}
+
+
+/* ---- Very small (< 480px) ---- */
+@media (max-width: 479px) {
+    .dashboard-stats-grid { grid-template-columns: 1fr !important; }
+    #kasir-products-grid  { grid-template-columns: repeat(2, 1fr) !important; }
+    .menu-card            { padding: 10px !important; }
+    .menu-card img        { height: 90px !important; }
+}
+
+/* =====================================================
+   CART BACKDROP (mobile overlay behind cart sheet)
+   ===================================================== */
+#cart-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 159;
+}
+#cart-backdrop.visible { display: block; }
+/* =====================================================
+   PRINT STYLES (For Receipt)
+   ===================================================== */
+@media print {
+    body * { visibility: hidden; }
+    #printable-receipt, #printable-receipt * { visibility: visible; }
+    #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+    /* Hide the modal backdrop and buttons during print */
+    #receipt-modal { background: transparent !important; }
+    #receipt-modal-actions { display: none !important; }
+}
+

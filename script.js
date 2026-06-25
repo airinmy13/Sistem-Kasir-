@@ -229,13 +229,68 @@ document.addEventListener('DOMContentLoaded', () => {
     // Interactive Cart Logic (Kasir)
     // ----------------------------------------------------
     // Global Products Array (source of truth)
-    // Start with empty products — user will add their own menu items
-    let products = [];
+    let defaultProducts = [
+        {
+            id: 'corndog',
+            name: 'Corndog',
+            category: 'Jajanan',
+            price: 10000,
+            stock: 100,
+            image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'bakaran',
+            name: 'Bakaran',
+            category: 'Bakaran',
+            price: 5000,
+            stock: 150,
+            image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'dimsum',
+            name: 'Dimsum',
+            category: 'Jajanan',
+            price: 15000,
+            stock: 80,
+            image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&auto=format&fit=crop&q=60'
+        }
+    ];
+    let products = JSON.parse(localStorage.getItem('kasir_products')) || defaultProducts;
+    if (!localStorage.getItem('kasir_products')) {
+        localStorage.setItem('kasir_products', JSON.stringify(products));
+    }
 
     let cart = [];
 
     // Global Sales Transactions Array — starts empty
-    let sales = [];
+    let sales = JSON.parse(localStorage.getItem('kasir_sales')) || [];
+    if (!localStorage.getItem('kasir_sales')) {
+        localStorage.setItem('kasir_sales', JSON.stringify(sales));
+    }
+
+    // Set current date automatically
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayISO = `${yyyy}-${mm}-${dd}`;
+
+    const getFormattedDate = () => {
+        const monthNames = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+        return `${today.getDate()} ${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+    };
+
+    const dashboardDateEl = document.getElementById('dashboard-date');
+    if (dashboardDateEl) dashboardDateEl.textContent = getFormattedDate();
+    
+    const kasirDateEl = document.getElementById('kasir-date');
+    if (kasirDateEl) kasirDateEl.textContent = getFormattedDate();
+
+    const pDateFilter = document.getElementById('penjualan-date-filter');
+    if (pDateFilter) pDateFilter.value = todayISO;
 
     const cartItemsWrapper = document.getElementById('cart-items');
     const cartTotalLabel = document.getElementById('cart-total');
@@ -437,8 +492,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 menu: menuNames,
                 qty: totalQty,
                 total: total,
-                method: "Tunai"
+                method: "Tunai",
+                items: cart.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    category: products.find(p => p.id === item.id)?.category || 'Jajanan'
+                }))
             });
+
+            localStorage.setItem('kasir_sales', JSON.stringify(sales));
 
             if (typeof renderSalesTable === 'function') {
                 renderSalesTable();
@@ -452,11 +516,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            localStorage.setItem('kasir_products', JSON.stringify(products));
+
             if (typeof renderMenuTable === 'function') {
                 renderMenuTable();
             }
             if (typeof renderKasirGrid === 'function') {
                 renderKasirGrid();
+            }
+
+            if (typeof updateDashboardStats === 'function') {
+                updateDashboardStats();
+            }
+            if (typeof updateReportView === 'function') {
+                const activeBtn = document.querySelector('.report-period-btn.bg-primary');
+                const currentPeriod = activeBtn ? activeBtn.getAttribute('data-period') : 'bulan';
+                updateReportView(currentPeriod);
             }
 
             // Show receipt modal
@@ -875,6 +950,8 @@ document.addEventListener('DOMContentLoaded', () => {
         product.price = newPrice;
         product.stock = newStock;
 
+        localStorage.setItem('kasir_products', JSON.stringify(products));
+
         const cartItem = cart.find(c => c.id === _pendingEditId);
         if (cartItem) {
             cartItem.name = newName;
@@ -922,6 +999,8 @@ document.addEventListener('DOMContentLoaded', () => {
         products = products.filter(p => p.id !== _pendingDeleteId);
         cart = cart.filter(c => c.id !== _pendingDeleteId);
         closeDeleteModal();
+
+        localStorage.setItem('kasir_products', JSON.stringify(products));
 
         // Success toast
         const toast = document.getElementById('toast');
@@ -1119,6 +1198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             products.push(newProduct);
+            localStorage.setItem('kasir_products', JSON.stringify(products));
             
             renderMenuTable();
             renderKasirGrid();
@@ -1243,63 +1323,126 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------
+    // Dashboard Stats Dynamic Calculations & Render
+    // ----------------------------------------------------
+    const updateDashboardStats = () => {
+        const salesToday = sales.filter(item => item.date === todayISO);
+        
+        let totalSales = 0;
+        let totalTrx = salesToday.length;
+        
+        salesToday.forEach(item => {
+            totalSales += item.total;
+        });
+        
+        let totalProfit = Math.round(totalSales * 0.5);
+
+        const totalSalesEl = document.getElementById('dashboard-total-sales');
+        const totalTrxEl = document.getElementById('dashboard-total-trx');
+        const totalProfitEl = document.getElementById('dashboard-total-profit');
+        
+        if (totalSalesEl) totalSalesEl.textContent = formatCurrency(totalSales);
+        if (totalTrxEl) totalTrxEl.textContent = totalTrx.toLocaleString('id-ID');
+        if (totalProfitEl) totalProfitEl.textContent = formatCurrency(totalProfit);
+
+        const bestSellersContainer = document.getElementById('dashboard-best-sellers');
+        if (bestSellersContainer) {
+            const itemCounts = {};
+            salesToday.forEach(trx => {
+                if (trx.items) {
+                    trx.items.forEach(item => {
+                        if (!itemCounts[item.name]) {
+                            itemCounts[item.name] = { qty: 0, image: '' };
+                        }
+                        itemCounts[item.name].qty += item.quantity;
+                        const prod = products.find(p => p.name === item.name);
+                        itemCounts[item.name].image = prod ? prod.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60&ixlib=rb-4.0.3';
+                    });
+                } else {
+                    const names = trx.menu.split(', ');
+                    names.forEach(name => {
+                        if (name) {
+                            if (!itemCounts[name]) {
+                                itemCounts[name] = { qty: 0, image: '' };
+                            }
+                            itemCounts[name].qty += Math.ceil(trx.qty / names.length);
+                            const prod = products.find(p => p.name === name);
+                            itemCounts[name].image = prod ? prod.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60&ixlib=rb-4.0.3';
+                        }
+                    });
+                }
+            });
+
+            const sortedItems = Object.keys(itemCounts).map(name => ({
+                name: name,
+                qty: itemCounts[name].qty,
+                image: itemCounts[name].image
+            })).sort((a, b) => b.qty - a.qty).slice(0, 3);
+
+            if (sortedItems.length === 0) {
+                bestSellersContainer.innerHTML = `<div class="text-center py-8 text-on-surface-variant font-medium">Belum ada penjualan terlaris hari ini</div>`;
+            } else {
+                bestSellersContainer.innerHTML = '';
+                sortedItems.forEach((item, index) => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = "flex items-center justify-between p-sm bg-surface-bright rounded-lg border border-outline-variant/30";
+                    rowDiv.innerHTML = `
+                        <div class="flex items-center space-x-4">
+                            <span class="text-label-lg font-bold text-primary w-6">${index + 1}.</span>
+                            <div class="w-10 h-10 rounded-lg overflow-hidden">
+                                <img class="w-full h-full object-cover" src="${item.image}" alt="${item.name}"/>
+                            </div>
+                            <span class="text-body-md font-body-md font-semibold">${item.name}</span>
+                        </div>
+                        <span class="text-label-lg bg-primary-fixed px-3 py-1 rounded-full text-on-primary-fixed-variant">${item.qty} pcs</span>
+                    `;
+                    bestSellersContainer.appendChild(rowDiv);
+                });
+            }
+        }
+
+        const chartLine = document.getElementById('dashboard-chart-line');
+        const chartArea = document.getElementById('dashboard-chart-area');
+        if (chartLine && chartArea) {
+            const hours = [8, 10, 12, 14, 16, 18];
+            const hourlySales = [0, 0, 0, 0, 0, 0];
+
+            salesToday.forEach(trx => {
+                const hour = parseInt(trx.time.split(':')[0]) || 0;
+                if (hour < 10) hourlySales[0] += trx.total;
+                else if (hour < 12) hourlySales[1] += trx.total;
+                else if (hour < 14) hourlySales[2] += trx.total;
+                else if (hour < 16) hourlySales[3] += trx.total;
+                else if (hour < 18) hourlySales[4] += trx.total;
+                else hourlySales[5] += trx.total;
+            });
+
+            const maxSale = Math.max(...hourlySales);
+            const xCoords = [0, 20, 40, 60, 80, 100];
+            let points = [];
+            
+            hourlySales.forEach((sale, i) => {
+                const x = xCoords[i];
+                const y = maxSale > 0 ? 100 - (sale / maxSale) * 80 : 100;
+                points.push(`${x} ${y}`);
+            });
+
+            const lineD = `M ` + points.join(' L ');
+            const areaD = `M ` + points.join(' L ') + ` L 100 100 L 0 100 Z`;
+            
+            chartLine.setAttribute('d', lineD);
+            chartArea.setAttribute('d', areaD);
+        }
+    };
+
+    // ----------------------------------------------------
     // Laporan Page Interactivity & Live Calculations
     // ----------------------------------------------------
     const reportPeriodBtns = document.querySelectorAll('.report-period-btn');
     const reportMonthSelect = document.getElementById('report-month-select');
     const exportReportBtn = document.getElementById('export-report-btn');
 
-    const reportData = {
-        hari: {
-            omset: "Rp 0",
-            laba: "Rp 0",
-            transaksi: "Rp 0",
-            count: 0,
-            terlaris: "-",
-            terlarisQty: 0,
-            chartPath: "M0 100 L 100 100",
-            chartArea: "M0 100 L 100 100 L 100 100 L 0 100 Z",
-            catJajananPct: "0%",
-            catBakaranPct: "0%",
-            catMinumanPct: "0%",
-            tableRows: `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Belum ada transaksi hari ini</td></tr>`
-        },
-        minggu: {
-            omset: "Rp 0",
-            laba: "Rp 0",
-            transaksi: "Rp 0",
-            count: 0,
-            terlaris: "-",
-            terlarisQty: 0,
-            chartPath: "M0 100 L 100 100",
-            chartArea: "M0 100 L 100 100 L 100 100 L 0 100 Z",
-            catJajananPct: "0%",
-            catBakaranPct: "0%",
-            catMinumanPct: "0%",
-            tableRows: `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Belum ada transaksi minggu ini</td></tr>`
-        },
-        bulan: {
-            omset: "Rp 0",
-            laba: "Rp 0",
-            transaksi: "Rp 0",
-            count: 0,
-            terlaris: "-",
-            terlarisQty: 0,
-            chartPath: "M0 100 L 100 100",
-            chartArea: "M0 100 L 100 100 L 100 100 L 0 100 Z",
-            catJajananPct: "0%",
-            catBakaranPct: "0%",
-            catMinumanPct: "0%",
-            tableRows: `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">Belum ada transaksi bulan ini</td></tr>`
-        }
-    };
-
-
-
     const updateReportView = (period) => {
-        const data = reportData[period];
-        if (!data) return;
-
         reportPeriodBtns.forEach(btn => {
             if (btn.getAttribute('data-period') === period) {
                 btn.className = "report-period-btn px-5 py-2 rounded-xl text-label-lg font-medium transition-colors bg-primary text-on-primary";
@@ -1308,29 +1451,205 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        document.getElementById('report-stat-omset').textContent = data.omset;
-        document.getElementById('report-stat-laba').textContent = data.laba;
-        document.getElementById('report-stat-transaksi').textContent = data.transaksi;
-        document.getElementById('report-stat-count').textContent = data.count;
-        document.getElementById('report-stat-terlaris').textContent = data.terlaris;
-        document.getElementById('report-stat-terlaris-qty').textContent = data.terlarisQty;
+        let filteredSales = [];
+        const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-        const chartLine = document.getElementById('report-chart-line');
-        const chartArea = document.getElementById('report-chart-area');
-        if (chartLine) chartLine.setAttribute('d', data.chartPath);
-        if (chartArea) chartArea.setAttribute('d', data.chartArea);
+        if (period === 'hari') {
+            filteredSales = sales.filter(s => s.date === todayISO);
+        } else if (period === 'minggu') {
+            const oneWeekAgo = new Date(startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000);
+            filteredSales = sales.filter(s => {
+                const sDate = new Date(s.date);
+                return sDate >= oneWeekAgo;
+            });
+        } else {
+            const currentMonthPrefix = todayISO.substring(0, 7);
+            filteredSales = sales.filter(s => s.date.substring(0, 7) === currentMonthPrefix);
+        }
 
-        document.getElementById('report-cat-jajanan-pct').textContent = data.catJajananPct;
-        document.getElementById('report-cat-jajanan-bar').style.width = data.catJajananPct;
+        let totalOmset = 0;
+        let totalCount = filteredSales.length;
+        filteredSales.forEach(s => totalOmset += s.total);
+        let totalLaba = Math.round(totalOmset * 0.5);
+        let avgTrx = totalCount > 0 ? Math.round(totalOmset / totalCount) : 0;
 
-        document.getElementById('report-cat-bakaran-pct').textContent = data.catBakaranPct;
-        document.getElementById('report-cat-bakaran-bar').style.width = data.catBakaranPct;
+        const itemCounts = {};
+        filteredSales.forEach(trx => {
+            if (trx.items) {
+                trx.items.forEach(item => {
+                    if (!itemCounts[item.name]) itemCounts[item.name] = 0;
+                    itemCounts[item.name] += item.quantity;
+                });
+            } else {
+                const names = trx.menu.split(', ');
+                names.forEach(name => {
+                    if (name) {
+                        if (!itemCounts[name]) itemCounts[name] = 0;
+                        itemCounts[name] += Math.ceil(trx.qty / names.length);
+                    }
+                });
+            }
+        });
 
-        document.getElementById('report-cat-minuman-pct').textContent = data.catMinumanPct;
-        document.getElementById('report-cat-minuman-bar').style.width = data.catMinumanPct;
+        let bestSeller = '-';
+        let bestSellerQty = 0;
+        Object.keys(itemCounts).forEach(name => {
+            if (itemCounts[name] > bestSellerQty) {
+                bestSeller = name;
+                bestSellerQty = itemCounts[name];
+            }
+        });
+
+        const catQuantities = { 'jajanan': 0, 'bakaran': 0, 'minuman': 0 };
+        filteredSales.forEach(trx => {
+            if (trx.items) {
+                trx.items.forEach(item => {
+                    const cat = (item.category || 'jajanan').toLowerCase();
+                    if (catQuantities[cat] !== undefined) {
+                        catQuantities[cat] += item.quantity;
+                    } else {
+                        catQuantities['jajanan'] += item.quantity;
+                    }
+                });
+            }
+        });
+
+        const totalCatQty = Object.values(catQuantities).reduce((a, b) => a + b, 0);
+        let jajananPct = 0;
+        let bakaranPct = 0;
+        let minumanPct = 0;
+
+        if (totalCatQty > 0) {
+            jajananPct = Math.round((catQuantities['jajanan'] / totalCatQty) * 100);
+            bakaranPct = Math.round((catQuantities['bakaran'] / totalCatQty) * 100);
+            minumanPct = 100 - jajananPct - bakaranPct;
+            if (minumanPct < 0) minumanPct = 0;
+        }
+
+        document.getElementById('report-stat-omset').textContent = formatCurrency(totalOmset);
+        document.getElementById('report-stat-laba').textContent = formatCurrency(totalLaba);
+        document.getElementById('report-stat-transaksi').textContent = formatCurrency(avgTrx);
+        document.getElementById('report-stat-count').textContent = totalCount;
+        document.getElementById('report-stat-terlaris').textContent = bestSeller;
+        document.getElementById('report-stat-terlaris-qty').textContent = bestSellerQty;
+
+        document.getElementById('report-cat-jajanan-pct').textContent = `${jajananPct}%`;
+        document.getElementById('report-cat-jajanan-bar').style.width = `${jajananPct}%`;
+
+        document.getElementById('report-cat-bakaran-pct').textContent = `${bakaranPct}%`;
+        document.getElementById('report-cat-bakaran-bar').style.width = `${bakaranPct}%`;
+
+        document.getElementById('report-cat-minuman-pct').textContent = `${minumanPct}%`;
+        document.getElementById('report-cat-minuman-bar').style.width = `${minumanPct}%`;
+
+        const reportChartLine = document.getElementById('report-chart-line');
+        const reportChartArea = document.getElementById('report-chart-area');
+        if (reportChartLine && reportChartArea) {
+            let labels = [];
+            let dailySales = [];
+
+            if (period === 'hari') {
+                labels = ["08.00", "10.00", "12.00", "14.00", "16.00", "18.00", "20.00"];
+                dailySales = [0, 0, 0, 0, 0, 0, 0];
+                filteredSales.forEach(s => {
+                    const hr = parseInt(s.time.split(':')[0]) || 0;
+                    if (hr < 10) dailySales[0] += s.total;
+                    else if (hr < 12) dailySales[1] += s.total;
+                    else if (hr < 14) dailySales[2] += s.total;
+                    else if (hr < 16) dailySales[3] += s.total;
+                    else if (hr < 18) dailySales[4] += s.total;
+                    else if (hr < 20) dailySales[5] += s.total;
+                    else dailySales[6] += s.total;
+                });
+            } else if (period === 'minggu') {
+                labels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+                dailySales = [0, 0, 0, 0, 0, 0, 0];
+                const dayIndices = [1, 2, 3, 4, 5, 6, 0];
+                filteredSales.forEach(s => {
+                    const dayIdx = new Date(s.date).getDay();
+                    const targetIdx = dayIndices.indexOf(dayIdx);
+                    if (targetIdx !== -1) {
+                        dailySales[targetIdx] += s.total;
+                    }
+                });
+            } else {
+                labels = ["Mgg 1", "Mgg 2", "Mgg 3", "Mgg 4"];
+                dailySales = [0, 0, 0, 0];
+                filteredSales.forEach(s => {
+                    const day = new Date(s.date).getDate();
+                    if (day <= 7) dailySales[0] += s.total;
+                    else if (day <= 14) dailySales[1] += s.total;
+                    else if (day <= 21) dailySales[2] += s.total;
+                    else dailySales[3] += s.total;
+                });
+            }
+
+            const labelsContainer = document.getElementById('report-chart-labels');
+            if (labelsContainer) {
+                labelsContainer.innerHTML = labels.map(l => `<span>${l}</span>`).join('');
+            }
+
+            const maxVal = Math.max(...dailySales);
+            const xCoords = labels.map((_, i) => (i / (labels.length - 1)) * 100);
+            const points = [];
+            dailySales.forEach((sale, i) => {
+                const x = xCoords[i];
+                const y = maxVal > 0 ? 100 - (sale / maxVal) * 80 : 100;
+                points.push(`${x} ${y}`);
+            });
+
+            const lineD = `M ` + points.join(' L ');
+            const areaD = `M ` + points.join(' L ') + ` L 100 100 L 0 100 Z`;
+
+            reportChartLine.setAttribute('d', lineD);
+            reportChartArea.setAttribute('d', areaD);
+        }
 
         const tableBody = document.getElementById('report-table-body');
-        if (tableBody) tableBody.innerHTML = data.tableRows;
+        if (tableBody) {
+            const dateGroups = {};
+            filteredSales.forEach(s => {
+                if (!dateGroups[s.date]) {
+                    dateGroups[s.date] = { count: 0, omset: 0 };
+                }
+                dateGroups[s.date].count++;
+                dateGroups[s.date].omset += s.total;
+            });
+
+            const sortedDates = Object.keys(dateGroups).sort((a, b) => b.localeCompare(a));
+            if (sortedDates.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant font-medium">Belum ada transaksi dalam periode ini</td></tr>`;
+            } else {
+                tableBody.innerHTML = '';
+                sortedDates.forEach(dateStr => {
+                    const group = dateGroups[dateStr];
+                    const laba = Math.round(group.omset * 0.5);
+                    
+                    const d = new Date(dateStr);
+                    const standardMonths = [
+                        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                    ];
+                    const formattedDate = `${d.getDate()} ${standardMonths[d.getMonth()]} ${d.getFullYear()}`;
+
+                    const status = group.omset > 200000 
+                        ? `<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-label-sm font-bold">Sangat Baik</span>`
+                        : `<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-label-sm font-bold">Cukup</span>`;
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-surface-bright/50 transition-colors';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-label-lg text-on-surface">${formattedDate}</td>
+                        <td class="px-6 py-4 text-body-md text-center">${group.count}</td>
+                        <td class="px-6 py-4 font-headline-sm text-primary text-right">${group.omset.toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4 font-headline-sm text-green-700 text-right">${laba.toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4 text-center">${status}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
     };
 
     reportPeriodBtns.forEach(btn => {
@@ -1361,8 +1680,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Reset Data button
+    const resetSalesBtn = document.getElementById('reset-sales-btn');
+    if (resetSalesBtn) {
+        resetSalesBtn.addEventListener('click', () => {
+            showConfirmModal('Apakah Anda yakin ingin menghapus semua data transaksi? Tindakan ini akan mengosongkan riwayat penjualan, dashboard, dan laporan.', 'Ya, Kosongkan', () => {
+                sales = [];
+                localStorage.setItem('kasir_sales', JSON.stringify(sales));
+                
+                renderSalesTable();
+                updateDashboardStats();
+                const activeBtn = document.querySelector('.report-period-btn.bg-primary');
+                const currentPeriod = activeBtn ? activeBtn.getAttribute('data-period') : 'bulan';
+                updateReportView(currentPeriod);
+
+                const mainToast = document.getElementById('toast');
+                if (mainToast) {
+                    mainToast.querySelector('p').textContent = 'Semua data transaksi berhasil dikosongkan!';
+                    mainToast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+                    mainToast.classList.add('opacity-100', 'translate-y-0');
+                    setTimeout(() => {
+                        mainToast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+                        mainToast.classList.remove('opacity-100', 'translate-y-0');
+                    }, 3000);
+                }
+            });
+        });
+    }
+
     // Initial sales log, kasir cards, and menu list rendering
     renderSalesTable();
     renderKasirGrid();
     renderMenuTable();
+    updateDashboardStats();
+    updateReportView('bulan');
 });

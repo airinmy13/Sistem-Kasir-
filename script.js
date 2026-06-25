@@ -470,8 +470,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Keranjang masih kosong!');
                 return;
             }
-            const cash = parseCurrency(cashInput.value);
+            let cash = parseCurrency(cashInput.value);
             const total = parseCurrency(cartTotalLabel.textContent);
+            
+            // Default to exact cash if user didn't enter anything
+            if (cash === 0 && total > 0) {
+                cash = total;
+                cashInput.value = total.toLocaleString('id-ID');
+                if (typeof updateChange === 'function') updateChange();
+            }
+
             if (cash < total) {
                 alert('Uang diterima kurang dari total tagihan!');
                 return;
@@ -596,8 +604,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Reset cart
             cart = [];
-            const cashInput = document.getElementById('kasir-cash');
-            if (cashInput) cashInput.value = '0';
+            const modalCashInput = document.getElementById('cart-cash-input');
+            if (modalCashInput) modalCashInput.value = '0';
             renderCart();
             
             // Auto-close cart sheet on mobile after checkout
@@ -1157,11 +1165,43 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                uploadedImageUrl = URL.createObjectURL(file);
-                imagePreview.src = uploadedImageUrl;
-                imagePreview.classList.remove('hidden');
-                uploadPlaceholder.classList.add('hidden');
-                removeImageBtn.classList.remove('hidden');
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400;
+                        const MAX_HEIGHT = 400;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Save as compressed Base64 so it persists in localStorage
+                        uploadedImageUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        imagePreview.src = uploadedImageUrl;
+                        imagePreview.classList.remove('hidden');
+                        uploadPlaceholder.classList.add('hidden');
+                        removeImageBtn.classList.remove('hidden');
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         });
     }
